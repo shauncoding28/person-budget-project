@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "errorhandler": "^1.5.1",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
