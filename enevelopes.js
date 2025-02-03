@@ -1,19 +1,66 @@
 const express = require('express');
 const router = express.Router();
+const { findEnvById } = require('./middleware');
+let { envelopes, nextId, totalBudget } = require('./data');
 
-let totalBudget = 1000;
-let envelopes = [];
 
+
+
+
+// adds new object to envelopes array
 router.post('/', (req, res, next) => {
     const { name, amount } = req.body;
 
     if (!name || amount == null) {
-        return res.sendStatus(400).send('Name and amount required');
+        return res.status(400).send('Name and amount required');
     }
 
-    const newEnvelope = { name, amount }
+    const newEnvelope = { id: nextId++, name, amount }
     envelopes.push(newEnvelope);
     res.status(201).send(newEnvelope);
 })
+
+
+
+// GET endpoint to retrieve all envelopes
+router.get('/', (req, res, next) => {
+    res.status(200).json(envelopes);
+})
+
+
+// GET endpoint to retrieve all envelopes
+router.get('/:id', findEnvById, (req, res, next) => {
+    res.status(200).send(req.envelope);
+})
+
+
+
+router.put('/:id', findEnvById, (req, res, next) => {
+
+
+    const requestedAmount = req.body.amount; //assigns requested amount to variable
+
+
+    //return error message if funds in envelope are not suuficient
+    if (requestedAmount > req.envelope.amount) {
+        res.status(400).send('Insufficent funds');
+        return;
+    }
+
+    req.envelope.amount -= requestedAmount; //subtracts the requested amount from the envelope
+
+    res.status(200).json(req.envelope); //send success message with updated envelope
+})
+
+
+router.delete('/:id', findEnvById, (req, res, next) => {
+
+    //filters through envelopes to update envelopes array excluding envelope with id matching the request
+    envelopes = envelopes.filter(env => env.id !== req.envelope.id);
+
+    //return success status/message
+    res.status(200).send('Letter deleted succesfully');
+})
+
 
 module.exports = router;
