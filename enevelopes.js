@@ -53,6 +53,29 @@ router.put('/:id', findEnvById, (req, res, next) => {
 })
 
 
+
+router.post('/transfers/:from/:to', (req, res, next) => {
+    const requestedAmount = req.body.amount;
+    const fromId = parseInt(req.params.from, 10);
+    const toId = parseInt(req.params.to, 10);
+
+    const envelopeFrom = envelopes.find(env => env.id === fromId);
+    const envelopeTo = envelopes.find(env => env.id === toId);
+
+    if (!envelopeFrom || !envelopeTo || requestedAmount > envelopeFrom.amount) {
+        res.status(400).send("Something went wrong please make sure funds are sufficient, check input and try again");
+        return;
+    }
+
+    envelopeFrom.amount -= requestedAmount;
+    envelopeTo.amount += requestedAmount;
+    res.status(200).json({ envelopeFrom, envelopeTo });
+
+})
+
+
+
+// deletes an envelope of specified id
 router.delete('/:id', findEnvById, (req, res, next) => {
 
     //filters through envelopes to update envelopes array excluding envelope with id matching the request
