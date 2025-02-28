@@ -3,6 +3,7 @@ const router = express.Router();
 require('dotenv').config();
 const db = require('./querries'); // imports query logic from querries.js file
 const { envelopeTransfer } = require('./querries'); //
+const { getTransactions } = require('./querries');
 const pool = require('./db');
 
 
@@ -16,8 +17,13 @@ router.post('/', db.createEnvelope);
 router.get('/', db.getEnvelopes);
 
 
+// Get endpoint to retrieve all transactions
+router.get('/transactions', db.getTransactions);
+
+
 // GET endpoint to retrieve all envelopes
 router.get('/:id', db.envelopeById);
+
 
 
 // PUT endpoint to withdraw from an envelope

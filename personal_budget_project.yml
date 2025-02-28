@@ -1,0 +1,185 @@
+openapi: 3.0.3
+info:
+  title: Personal Budget API
+  version: 1.0.11
+  description: Simple API that creates envelopes of specified purpose and stores a value
+paths:
+  /envelopes:
+    summary: This path is used to retrieve all envelopes and create new envelopes
+    get:
+      summary: Used to retrieve all envelopes
+      description: ''
+      operationId: get_envelopes
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                envelopes:
+                  value: |
+                    [
+                        {
+                            "id": 1,
+                            "name": "Honey",
+                            "amount": 5.00
+                        },
+                        {
+                            "id": 3,
+                            "name": "Milk",
+                            "amount": 10.00
+                        },
+                        {
+                            "id": 4,
+                            "name": "Cereal",
+                            "amount": 10.00
+                        }
+                    ]
+        default:
+          description: Default error sample response
+      tags:
+        - Envelopes info
+    post:
+      summary: Used to create a new envelope
+      description: ''
+      operationId: create_envelope
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                envelope created response:
+                  value: |-
+                    {
+                        "message": "New envelope created!",
+                        "envelope": {
+                            "id": 15,
+                            "name": "Baking",
+                            "amount": "10.00"
+                        }
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Envelope creation and transfers
+  /envelopes/:id:
+    summary: >-
+      This path is used to retrieve, delete or withdraw from envelope of
+      specified id 
+    get:
+      summary: Returns an envelope of specified id
+      description: ''
+      operationId: envelope_by_id
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                envelope of specified id response:
+                  value: |-
+                    {
+                        "id": 1,
+                        "name": "Honey",
+                        "amount": "5.00"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Envelopes info
+    put:
+      summary: Used to withdraw from envelope
+      description: ''
+      operationId: withdraw_from_envelope
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                nvelope withdrawal response:
+                  value: |-
+                    {
+                        "id": 15,
+                        "newAmount": 5
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Witdraw from envelope
+    delete:
+      summary: Deletes an envelope of specified id
+      description: ''
+      operationId: ''
+      responses:
+        '200':
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                envelope deleted confirmation:
+                  value: Letter deleted succesfully
+        default:
+          description: Default error sample response
+      tags:
+        - Deletes envelope
+  /envelopes/transfers/:from/:to:
+    summary: This path is used to transfer from one envelope to another via their id's
+    post:
+      summary: Transfers specified amount from one envelope to another
+      description: ''
+      operationId: ''
+      responses:
+        '200':
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                transfer confirmation:
+                  value: Transfer successful
+        default:
+          description: Default error sample response
+      tags:
+        - Envelope creation and transfers
+  /envelopes/transactions:
+    summary: This path is used to view all previous transfers between envelopes
+    get:
+      summary: Returns transaction history (envelope to envelope transfers)
+      description: ''
+      operationId: ''
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                transactions data:
+                  value: |-
+                    [
+                        {
+                            "id": 1,
+                            "date": "2025-02-27T19:57:23.181Z",
+                            "amount": "1",
+                            "recipient": "Ham",
+                            "envelope_id": 5
+                        },
+                        {
+                            "id": 2,
+                            "date": "2025-02-27T20:01:57.977Z",
+                            "amount": "1",
+                            "recipient": "hola",
+                            "envelope_id": 5
+                        },
+                        {
+                            "id": 3,
+                            "date": "2025-02-28T11:30:09.651Z",
+                            "amount": "5",
+                            "recipient": "Honey",
+                            "envelope_id": 3
+                        },
+                        {
+                            "id": 4,
+                            "date": "2025-02-28T12:41:15.336Z",
+                            "amount": "5",
+                            "recipient": "sauce",
+                            "envelope_id": 9
+                        }
+                    ]
+        default:
+          description: Default error sample response
+      tags:
+        - Envelopes info

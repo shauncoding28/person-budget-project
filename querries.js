@@ -1,7 +1,7 @@
 const pool = require('./db');
 
 
-let nextId = 3;
+
 
 const getEnvelopes = (req, res) => {
     pool.query('SELECT * FROM envelopes ORDER BY id ASC', (error, results) => {
@@ -12,43 +12,61 @@ const getEnvelopes = (req, res) => {
     })
 }
 
+const getTransactions = async (req, res, next) => {
+    try {
+        const result = await pool.query('SELECT * FROM transactions ORDER BY id ASC');
+        res.status(200).json(result.rows);
+    } catch (error) {
+        throw (error);
+    }
+};
+
+
 
 const createEnvelope = (req, res, next) => {
     const { name, amount } = req.body;
-    const id = nextId++
 
     if (!name || amount == null) {
         return res.status(400).send('Name and amount required');
     }
 
-    //creates new envelope
-    const query = 'INSERT INTO envelopes (id, name, amount) VALUES ($1, $2, $3)';
-    const values = [id, name, amount];
+    // Creates new envelope
+    const query = 'INSERT INTO envelopes (name, amount) VALUES ($1, $2) RETURNING *';
+    const values = [name, amount];
 
     pool.query(query, values, (error, result) => {
         if (error) {
             res.status(400).send();
-            throw (error);
+            throw error; // Corrected syntax
         }
 
-        res.status(200).json(result.rows[id - 1]);
-    })
-}
+        // Ensure result is defined here
+        res.status(200).json({
+            message: 'New envelope created!',
+            envelope: result.rows[0]
+        });
+    });
+};
 
-const envelopeById = (req, res, next) => {
-    const envelopeId = parseInt(req.params.id, 10); //converts id to integer
-    const query = 'SELECT * FROM envelopes WHERE id = $1';
-    const values = [envelopeId];
 
-    pool.query(query, values, (error, results) => {
-        if (error) {
-            res.status(404).send('Envelope with requested id does not exist');
-            throw (error);
+
+
+const envelopeById = async (req, res, next) => {
+    try {
+        const envelopeId = parseInt(req.params.id, 10); // Converts id to integer
+        const query = 'SELECT * FROM envelopes WHERE id = $1';
+        const values = [envelopeId];
+
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).send('Envelope with requested id does not exist');
         }
 
-        res.status(200).json(results.rows[0]);
-    })
-
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        next(error);
+    }
 };
 
 
@@ -67,7 +85,7 @@ const withdrawFromEnvelope = async (req, res, next) => {
         }
 
         // removes unwanted symbols
-        const currentAmount = parseFloat(result.rows[0].amount.replace(/[^0-9.-]+/g, ""));
+        const currentAmount = parseFloat(result.rows[0].amount);
         if (isNaN(currentAmount) || isNaN(requestedAmount)) {
             return res.status(400).send('Invalid amount');
         }
@@ -122,9 +140,20 @@ const envelopeTransfer = async (req, res, next) => {
         const addQuery = 'UPDATE envelopes SET amount = amount + $1 WHERE id = $2';
         await pool.query(addQuery, [requestedAmount, toId]);
 
+        // Get's receivers name
+        const nameQuery = 'SELECT name FROM envelopes WHERE id = $1'
+        response = await pool.query(nameQuery, [toId]);
+        const receiverName = response.rows[0].name;
+
+        // Logs transfer in transactions table
+        const transactionsQuery = 'INSERT INTO transactions (amount, recipient, envelope_id) VALUES ($1, $2, $3)';
+        await pool.query(transactionsQuery, [requestedAmount, receiverName, fromId]);
+
+
         await pool.query('COMMIT');
 
         res.status(200).send('Transfer successful');
+
     } catch (error) {
         await pool.query('ROLLBACK');
         throw (error);
@@ -162,6 +191,7 @@ const deleteEnvelope = async (req, res, next) => {
 
 module.exports = {
     getEnvelopes,
+    getTransactions,
     createEnvelope,
     envelopeById,
     withdrawFromEnvelope,
